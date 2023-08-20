@@ -1,6 +1,7 @@
 import contextlib
 import io
 import os.path
+from hashlib import md5
 
 import ffmpeg
 from fastapi import FastAPI, Response
@@ -19,8 +20,8 @@ app.add_middleware(
 async def get_audio(trackSearch: str):
     if not trackSearch:
         return Response(status_code=400)
-
-    filename = f"./cache/{trackSearch}.mp3"
+    track_hash = md5(trackSearch.encode("utf-8")).hexdigest()
+    filename = f"./cache/{track_hash}.mp3"
 
     if os.path.isfile(filename):
         print("Found cached file")
@@ -30,7 +31,7 @@ async def get_audio(trackSearch: str):
                 content=ffbuffer.getvalue(),
                 media_type="audio/mp3",
                 headers={
-                    "Content-Disposition": f"attachment; filename={trackSearch}.mp3",
+                    "Content-Disposition": f"attachment; filename={track_hash}.mp3",
                 },
                 status_code=200,
             )
@@ -81,7 +82,7 @@ async def get_audio(trackSearch: str):
         content=ffbuffer.getvalue(),
         media_type="audio/mp3",
         headers={
-            "Content-Disposition": f"attachment; filename={trackSearch}.mp3",
+            "Content-Disposition": f"attachment; filename={track_hash}.mp3",
         },
         status_code=200,
     )
