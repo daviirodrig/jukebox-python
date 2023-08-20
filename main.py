@@ -1,5 +1,6 @@
 import contextlib
 import io
+import os.path
 
 import ffmpeg
 from fastapi import FastAPI, Response
@@ -18,6 +19,22 @@ app.add_middleware(
 async def get_audio(trackSearch: str):
     if not trackSearch:
         return Response(status_code=400)
+
+    filename = f"./cache/{trackSearch}.mp3"
+
+    if os.path.isfile(filename):
+        print("Found cached file")
+        with open(filename, "rb") as f:
+            ffbuffer = io.BytesIO(f.read())
+            return Response(
+                content=ffbuffer.getvalue(),
+                media_type="audio/mp3",
+                headers={
+                    "Content-Disposition": f"attachment; filename={trackSearch}.mp3",
+                },
+                status_code=200,
+            )
+
     yt_dlp_config = {
         "extract_flat": "discard_in_playlist",
         "final_ext": "mp3",
@@ -41,7 +58,7 @@ async def get_audio(trackSearch: str):
     }
     buffer = io.BytesIO()
 
-    with contextlib.redirect_stdout(buffer), yt_dlp(yt_dlp_config) as y:  # type: ignore
+    with contextlib.redirect_stdout(buffer), yt_dlp(yt_dlp_config) as y:
         try:
             y.download(
                 f"https://music.youtube.com/search?q={trackSearch}&sp=EgWKAQIIAWoKEAoQAxAEEAkQBQ%3D%3D"
@@ -51,16 +68,14 @@ async def get_audio(trackSearch: str):
 
     process = (
         ffmpeg.input("pipe:")
-        .output(filename="./compress.tmp.mp3", c="libmp3lame", audio_bitrate="128k")
+        .output(filename=filename, c="libmp3lame", audio_bitrate="128k")
         .run_async(pipe_stdin=True, overwrite_output=True)
     )
 
-    process.communicate(input=buffer)
+    process.communicate(input=buffer.getbuffer())
 
-    with open("./compress.tmp.mp3", "rb") as f:
+    with open(filename, "rb") as f:
         ffbuffer = io.BytesIO(f.read())
-
-    print(len(ffbuffer.getvalue()) / 1024)
 
     return Response(
         content=ffbuffer.getvalue(),
