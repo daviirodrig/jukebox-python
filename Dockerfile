@@ -4,6 +4,8 @@ ENV PYTHONUNBUFFERED=true
 
 WORKDIR /usr/app
 
+RUN mkdir /usr/app/cache
+
 COPY requirements.txt ./
 
 RUN apt-get update -y

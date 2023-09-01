@@ -16,7 +16,7 @@ app.add_middleware(
 )
 
 
-@app.get("/python/audio/jukebox/{trackSearch}")
+@app.get("/python/audio/jukebox/{trackSearch:path}")
 async def get_audio(trackSearch: str):
     if not trackSearch:
         return Response(status_code=400)
