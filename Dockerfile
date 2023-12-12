@@ -15,4 +15,4 @@ RUN pip install --disable-pip-version-check --no-cache-dir --user -r requirement
 
 COPY . .
 
-CMD ["python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8010", "--reload"]
+CMD ["python", "-m", "hypercorn", "main:app", "-b", "0.0.0.0:8010"]
