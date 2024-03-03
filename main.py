@@ -8,10 +8,27 @@ from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
 from yt_dlp import YoutubeDL as yt_dlp
 from yt_dlp import utils
+import psutil
+import ipaddress
+import socket
 
 app = FastAPI()
 
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+
+def ip_rotator(ip_list):
+    ip_index = 0
+    while True:
+        yield ip_list[ip_index]
+        ip_index = (ip_index + 1) % len(ip_list)
+
+
+def get_ips(interface):
+    interface_addrs = psutil.net_if_addrs().get(interface) or []
+    ipv6s = [ipaddress.ip_address(addr.address) for addr in interface_addrs if addr.family == socket.AF_INET6]
+    global_ips = [ip for ip in ipv6s if ip.is_global]
+    return global_ips
 
 
 @app.get("/python/audio/jukebox/{trackSearch:path}")
@@ -33,7 +50,7 @@ def get_audio(trackSearch: str):
                 },
                 status_code=200,
             )
-
+    ip = next(ip_rotator(get_ips(os.environ.get("INTERFACE"))))
     yt_dlp_config = {
         "extract_flat": "discard_in_playlist",
         "final_ext": "mp3",
@@ -43,7 +60,7 @@ def get_audio(trackSearch: str):
         "max_downloads": 1,
         "max_filesize": 104857600,
         "noplaylist": True,
-        "source_address": "::",
+        "source_address": ip,
         "outtmpl": "-",
         "logtostderr": True,
         "playlistend": 1,
