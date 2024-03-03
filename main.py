@@ -11,13 +11,11 @@ from yt_dlp import utils
 
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
 @app.get("/python/audio/jukebox/{trackSearch:path}")
-async def get_audio(trackSearch: str):
+def get_audio(trackSearch: str):
     if not trackSearch:
         return Response(status_code=400)
     track_hash = md5(trackSearch.encode("utf-8")).hexdigest()
@@ -45,6 +43,7 @@ async def get_audio(trackSearch: str):
         "max_downloads": 1,
         "max_filesize": 104857600,
         "noplaylist": True,
+        "source_address": "::",
         "outtmpl": "-",
         "logtostderr": True,
         "playlistend": 1,
@@ -61,9 +60,7 @@ async def get_audio(trackSearch: str):
 
     with contextlib.redirect_stdout(buffer), yt_dlp(yt_dlp_config) as y:
         try:
-            y.download(
-                f"https://music.youtube.com/search?q={trackSearch}&sp=EgWKAQIIAWoKEAoQAxAEEAkQBQ%3D%3D"
-            )
+            y.download(f"https://music.youtube.com/search?q={trackSearch}&sp=EgWKAQIIAWoKEAoQAxAEEAkQBQ%3D%3D")
         except utils.MaxDownloadsReached:
             pass
 
