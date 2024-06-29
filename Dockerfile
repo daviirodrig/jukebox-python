@@ -15,4 +15,4 @@ RUN pip install --disable-pip-version-check --no-cache-dir --user -r requirement
 
 COPY . .
 
-CMD ["python", "-m", "hypercorn", "main:app", "-b", "0.0.0.0:8010"]
+CMD ["python", "-m", "fastapi", "run", "--port", "8010"]
