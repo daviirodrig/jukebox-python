@@ -11,7 +11,7 @@ COPY requirements.txt ./
 RUN apt-get update -y
 RUN apt-get install ffmpeg -y --no-install-recommends
 
-RUN pip install --disable-pip-version-check --no-cache-dir --user -r requirements.txt
+RUN pip install --disable-pip-version-check --no-cache-dir --upgrade -r requirements.txt
 
 COPY . .
 
