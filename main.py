@@ -56,24 +56,16 @@ def get_audio(request: Request, trackSearch: str):
 
     yt_dlp_config = {
         "extract_flat": "discard_in_playlist",
-        "final_ext": "mp3",
-        "format": "mp3/bestaudio/best",
+        "format": "bestaudio.3",
         "fragment_retries": 10,
         "ignoreerrors": "only_download",
         "max_downloads": 1,
         "max_filesize": 104857600,
         "noplaylist": True,
         "source_address": "::",
-        "outtmpl": "-",
+        "outtmpl": filename,
         "logtostderr": True,
         "playlistend": 1,
-        "postprocessors": [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": "192",
-            }
-        ],
         "retries": 10,
     }
     buffer = io.BytesIO()
@@ -84,6 +76,16 @@ def get_audio(request: Request, trackSearch: str):
         except utils.MaxDownloadsReached:
             pass
 
+    # final_file = process_ffmpeg(filename, buffer)
+    if os.path.isfile(filename):
+        with open(filename, "rb") as f:
+            file_size = os.path.getsize(filename)
+            headers = {"Content-Length": str(file_size), "Content-Type": "audio/mpeg"}
+            return StreamingResponse(io.BytesIO(f.read()), headers=headers)
+    else:
+        raise HTTPException(status_code=500, detail="Error processing audio")
+
+def process_ffmpeg(filename: str, buffer: io.BytesIO) -> str:
     process = FFmpeg().option("y").input("pipe:0").output(filename, {"b:a": "128k", "c:a": "libmp3lame"})
 
     @process.on("progress")
@@ -92,7 +94,4 @@ def get_audio(request: Request, trackSearch: str):
 
     process.execute(buffer.getvalue())
 
-    with open(filename, "rb") as f:
-        file_size = os.path.getsize(filename)
-        headers = {"Content-Length": str(file_size), "Content-Type": "audio/mpeg"}
-        return StreamingResponse(io.BytesIO(f.read()), headers=headers)
+    return filename
