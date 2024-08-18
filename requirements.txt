@@ -1,5 +1,5 @@
 fastapi==0.111.0
-yt-dlp==2024.07.01
+yt-dlp==2024.08.06
 python-ffmpeg==2.0.12
 uvicorn==0.27.1
 hypercorn==0.16.0
