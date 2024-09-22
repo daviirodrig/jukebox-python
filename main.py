@@ -65,6 +65,8 @@ def get_audio(request: Request, trackSearch: str):
         "source_address": "::",
         "outtmpl": filename,
         "logtostderr": True,
+        "username": "oauth2",
+        "password": "",
         "playlistend": 1,
         "retries": 10,
     }
